@@ -1,0 +1,2 @@
+dotnet add package System.IdentityModel.Tokens.Jwt
+dotnet add package Microsoft.IdentityModel.Tokens
