@@ -420,7 +420,7 @@ namespace Backend.Controllers
 
                 // SQL query to fetch requests approved by both Admin1 and Admin2
                 const string query = @"
-            SELECT br.BorrowId, br.ReqBorrowDate, br.RequestedBy, br.Purpose, br.Status, br.Priority, br.Admin1Approval, br.Admin2Approval,br.Admin3Approval, bi.ItemName, bi.Quantity
+            SELECT br.BorrowId, br.ReqBorrowDate, br.RequestedBy, br.Purpose, br.Status, br.Priority, br.Admin1Approval, br.Admin2Approval,br.Admin3Approval, bi.ItemName, bi.Quantity,br.Email
             FROM Borrowreq_tb br
             JOIN BorrowItems_tb bi ON br.BorrowId = bi.BorrowId
             WHERE br.Admin1Approval = 'Approved' AND br.Admin2Approval = 'Approved'"; // Check for both approvals
@@ -693,49 +693,49 @@ namespace Backend.Controllers
 
 
 
-[HttpPost("UpdateRecieveStatus")]
-public async Task<IActionResult> UpdateRecieveStatus([FromBody] RecieveStatusRequest recieveStatusRequest)
-{
-    if (recieveStatusRequest == null || recieveStatusRequest.BorrowID <= 0 || string.IsNullOrWhiteSpace(recieveStatusRequest.RecieveStatus))
-        return BadRequest("Invalid BorrowerID or RecieveStatus.");
-
-    using (var connection = new SqliteConnection(_connectionString))
-    {
-        try
+        [HttpPost("UpdateRecieveStatus")]
+        public async Task<IActionResult> UpdateRecieveStatus([FromBody] RecieveStatusRequest recieveStatusRequest)
         {
-            await connection.OpenAsync();
+            if (recieveStatusRequest == null || recieveStatusRequest.BorrowID <= 0 || string.IsNullOrWhiteSpace(recieveStatusRequest.RecieveStatus))
+                return BadRequest("Invalid BorrowerID or RecieveStatus.");
 
-            const string query = @"
+            using (var connection = new SqliteConnection(_connectionString))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+
+                    const string query = @"
                 UPDATE Borrowreq_tb 
                 SET RecieveStatus = @RecieveStatus 
                 WHERE BorrowID = @BorrowID";
 
-            var rowsAffected = await connection.ExecuteAsync(query, new
-            {
-                RecieveStatus = recieveStatusRequest.RecieveStatus,
-                BorrowID = recieveStatusRequest.BorrowID
-            });
+                    var rowsAffected = await connection.ExecuteAsync(query, new
+                    {
+                        RecieveStatus = recieveStatusRequest.RecieveStatus,
+                        BorrowID = recieveStatusRequest.BorrowID
+                    });
 
-            if (rowsAffected == 0)
-                return NotFound("BorrowerID not found.");
+                    if (rowsAffected == 0)
+                        return NotFound("BorrowerID not found.");
 
-            return Ok("RecieveStatus successfully updated.");
+                    return Ok("RecieveStatus successfully updated.");
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, $"Internal server error: {ex.Message}");
+                }
+            }
         }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
-    }
-}
 
 
 
     }
     public class RecieveStatusRequest
-{
-    public int BorrowID { get; set; }
-    public string RecieveStatus { get; set; }
-}
+    {
+        public int BorrowID { get; set; }
+        public string RecieveStatus { get; set; }
+    }
 
 
     public class NoteRequest
