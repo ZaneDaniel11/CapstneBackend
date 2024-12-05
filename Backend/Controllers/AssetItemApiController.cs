@@ -32,19 +32,25 @@ namespace Backend.Controllers
 public async Task<IActionResult> InsertAssetAsync(AssetItem newAsset)
 {
     const string insertQuery = @"
-    INSERT INTO asset_item_tb 
+    INSERT INTO asset_item_db 
     (
-        CategoryID, AssetName, DatePurchased, DateIssued, IssuedTo, CheckedBy, Cost, 
-        Location, AssetCode, Remarks, DepreciationRate, DepreciationValue, 
-        DepreciationPeriodType, DepreciationPeriodValue
+        CategoryID, AssetQRCode, AssetName, AssetPicture, DatePurchased, DateIssued, IssuedTo, 
+        AssetVendor, CheckedBy, AssetCost, AssetCode, Remarks, AssetLocation, 
+        WarrantyStartDate, WarrantyExpirationDate, WarrantyVendor, WarrantyContact, 
+        AssetStatus, AssetType, PreventiveMaintenanceSchedule, Notes, 
+        OperationStartDate, OperationEndDate, DisposalDate, DisposalMethod, 
+        TransferredTo, TransferDate
     ) 
     VALUES 
     (
-        @CategoryID, @AssetName, @DatePurchased, @DateIssued, @IssuedTo, @CheckedBy, @Cost, 
-        @Location, @AssetCode, @Remarks, @DepreciationRate, @DepreciationValue, 
-        @DepreciationPeriodType, @DepreciationPeriodValue
+        @CategoryID, @AssetQRCode, @AssetName, @AssetPicture, @DatePurchased, @DateIssued, @IssuedTo, 
+        @AssetVendor, @CheckedBy, @AssetCost, @AssetCode, @Remarks, @AssetLocation, 
+        @WarrantyStartDate, @WarrantyExpirationDate, @WarrantyVendor, @WarrantyContact, 
+        @AssetStatus, @AssetType, @PreventiveMaintenanceSchedule, @Notes, 
+        @OperationStartDate, @OperationEndDate, @DisposalDate, @DisposalMethod, 
+        @TransferredTo, @TransferDate
     );
-    SELECT * FROM asset_item_tb ORDER BY AssetId DESC LIMIT 1;";
+    SELECT * FROM asset_item_db ORDER BY AssetID DESC LIMIT 1;";
 
     using (var connection = new SqliteConnection(_connectionString))
     {
@@ -54,19 +60,32 @@ public async Task<IActionResult> InsertAssetAsync(AssetItem newAsset)
         var result = await connection.QuerySingleOrDefaultAsync<AssetItem>(insertQuery, new
         {
             newAsset.CategoryID,
+            newAsset.AssetQRCode,
             newAsset.AssetName,
+            newAsset.AssetPicture,
             newAsset.DatePurchased,
             newAsset.DateIssued,
             newAsset.IssuedTo,
+            newAsset.AssetVendor,
             newAsset.CheckedBy,
-            newAsset.Cost,
-            newAsset.Location,
+            newAsset.AssetCost,
             newAsset.AssetCode,
             newAsset.Remarks,
-            newAsset.DepreciationRate,
-            newAsset.DepreciationValue,
-            newAsset.DepreciationPeriodType, // "year" or "month"
-            newAsset.DepreciationPeriodValue // Depreciation interval
+            newAsset.AssetLocation,
+            newAsset.WarrantyStartDate,
+            newAsset.WarrantyExpirationDate,
+            newAsset.WarrantyVendor,
+            newAsset.WarrantyContact,
+            newAsset.AssetStatus,
+            newAsset.AssetType,
+            newAsset.PreventiveMaintenanceSchedule,
+            newAsset.Notes,
+            newAsset.OperationStartDate,
+            newAsset.OperationEndDate,
+            newAsset.DisposalDate,
+            newAsset.DisposalMethod,
+            newAsset.TransferredTo,
+            newAsset.TransferDate
         });
 
         if (result == null)
@@ -80,6 +99,7 @@ public async Task<IActionResult> InsertAssetAsync(AssetItem newAsset)
         return Ok(result); // Return the newly inserted asset
     }
 }
+
 private async Task CalculateDepreciationScheduleAsync(AssetItem asset, SqliteConnection connection)
 {
     decimal currentValue = asset.Cost;
