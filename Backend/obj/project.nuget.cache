@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "M1krxCpodbQRLET1+KN4mDHxL3ysexSuPTVcDxLlXU0Y0H2iJgrPHDIkP75+S6WAiD4wOeh/vWqkdmkLe1j+sA==",
+  "dgSpecHash": "soDgShj4Kqaxwmv7pMzBulxQ44YSeDuAIl0LlVm3neD2hTT2dvZj1n1VPkHR1a2iYLSPoKUtdz4+ScSwkLOL5g==",
   "success": true,
   "projectFilePath": "C:\\Users\\Administrator\\Desktop\\CapstneBackend\\backend\\Daper.csproj",
   "expectedPackageFiles": [
@@ -24,6 +24,7 @@
     "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.identitymodel.tokens\\8.0.1\\microsoft.identitymodel.tokens.8.0.1.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.net.http.headers\\2.2.0\\microsoft.net.http.headers.2.2.0.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.openapi\\1.2.3\\microsoft.openapi.1.2.3.nupkg.sha512",
+    "C:\\Users\\Administrator\\.nuget\\packages\\qrcoder\\1.6.0\\qrcoder.1.6.0.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.6\\sqlitepclraw.bundle_e_sqlite3.2.1.6.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\sqlitepclraw.core\\2.1.6\\sqlitepclraw.core.2.1.6.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.6\\sqlitepclraw.lib.e_sqlite3.2.1.6.nupkg.sha512",
