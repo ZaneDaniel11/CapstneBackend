@@ -29,81 +29,97 @@ namespace Backend.Controllers
 
       
 [HttpPost("InsertAsset")]
-public async Task<IActionResult> InsertAssetAsync(AssetItem newAsset)
+public async Task<IActionResult> InsertAssetAsync([FromBody] AssetItem newAsset)
+
 {
+    if (newAsset == null)
+    {
+        return BadRequest("Payload is invalid or missing.");
+    }
+
     const string insertQuery = @"
     INSERT INTO asset_item_db 
     (
-        CategoryID, AssetQRCode, AssetName, AssetPicture, DatePurchased, DateIssued, IssuedTo, 
-        AssetVendor, CheckedBy, AssetCost, AssetCode, Remarks, AssetLocation, 
-        WarrantyStartDate, WarrantyExpirationDate, WarrantyVendor, WarrantyContact, 
-        AssetStatus, AssetType, PreventiveMaintenanceSchedule, Notes, 
-        OperationStartDate, OperationEndDate, DisposalDate, DisposalMethod, 
-        TransferredTo, TransferDate
+        CategoryID, AssetQRCodePath, AssetQRCodeBlob, AssetName, AssetPicture, DatePurchased, 
+        DateIssued, IssuedTo, AssetVendor, CheckedBy, AssetCost, AssetCode, Remarks, 
+        AssetLocation, WarrantyStartDate, WarrantyExpirationDate, WarrantyVendor, WarrantyContact, 
+        AssetStatus, AssetStype, AssetPreventiveMaintenace, Notes, OperationStartDate, 
+        OperationEndDate, DisposalDate
     ) 
     VALUES 
     (
-        @CategoryID, @AssetQRCode, @AssetName, @AssetPicture, @DatePurchased, @DateIssued, @IssuedTo, 
-        @AssetVendor, @CheckedBy, @AssetCost, @AssetCode, @Remarks, @AssetLocation, 
-        @WarrantyStartDate, @WarrantyExpirationDate, @WarrantyVendor, @WarrantyContact, 
-        @AssetStatus, @AssetType, @PreventiveMaintenanceSchedule, @Notes, 
-        @OperationStartDate, @OperationEndDate, @DisposalDate, @DisposalMethod, 
-        @TransferredTo, @TransferDate
+        @CategoryID, @AssetQRCodePath, @AssetQRCodeBlob, @AssetName, @AssetPicture, @DatePurchased, 
+        @DateIssued, @IssuedTo, @AssetVendor, @CheckedBy, @AssetCost, @AssetCode, @Remarks, 
+        @AssetLocation, @WarrantyStartDate, @WarrantyExpirationDate, @WarrantyVendor, @WarrantyContact, 
+        @AssetStatus, @AssetStype, @AssetPreventiveMaintenace, @Notes, @OperationStartDate, 
+        @OperationEndDate, @DisposalDate
     );
-    SELECT * FROM asset_item_db ORDER BY AssetID DESC LIMIT 1;";
+    SELECT last_insert_rowid() AS AssetID;";
 
-    using (var connection = new SqliteConnection(_connectionString))
+    try
     {
-        connection.Open();
-
-        // Insert asset and retrieve the newly created asset
-        var result = await connection.QuerySingleOrDefaultAsync<AssetItem>(insertQuery, new
+        using (var connection = new SqliteConnection(_connectionString))
         {
-            newAsset.CategoryID,
-            newAsset.AssetQRCode,
-            newAsset.AssetName,
-            newAsset.AssetPicture,
-            newAsset.DatePurchased,
-            newAsset.DateIssued,
-            newAsset.IssuedTo,
-            newAsset.AssetVendor,
-            newAsset.CheckedBy,
-            newAsset.AssetCost,
-            newAsset.AssetCode,
-            newAsset.Remarks,
-            newAsset.AssetLocation,
-            newAsset.WarrantyStartDate,
-            newAsset.WarrantyExpirationDate,
-            newAsset.WarrantyVendor,
-            newAsset.WarrantyContact,
-            newAsset.AssetStatus,
-            newAsset.AssetType,
-            newAsset.PreventiveMaintenanceSchedule,
-            newAsset.Notes,
-            newAsset.OperationStartDate,
-            newAsset.OperationEndDate,
-            newAsset.DisposalDate,
-            newAsset.DisposalMethod,
-            newAsset.TransferredTo,
-            newAsset.TransferDate
-        });
+            connection.Open();
 
-        if (result == null)
-        {
-            return BadRequest("Failed to insert the asset.");
+            // Insert asset and get the generated AssetID
+            var assetId = await connection.ExecuteScalarAsync<int>(insertQuery, new
+            {
+                newAsset.CategoryID,
+                newAsset.AssetQRCodePath,
+                newAsset.AssetQRCodeBlob, // Base64-encoded string converted to byte[] by the framework
+                newAsset.AssetName,
+                newAsset.AssetPicture,
+                newAsset.DatePurchased,
+                newAsset.DateIssued,
+                newAsset.IssuedTo,
+                newAsset.AssetVendor,
+                newAsset.CheckedBy,
+                newAsset.AssetCost,
+                newAsset.AssetCode,
+                newAsset.Remarks,
+                newAsset.AssetLocation,
+                newAsset.WarrantyStartDate,
+                newAsset.WarrantyExpirationDate,
+                newAsset.WarrantyVendor,
+                newAsset.WarrantyContact,
+                newAsset.AssetStatus,
+                newAsset.AssetStype,
+                newAsset.AssetPreventiveMaintenace,
+                newAsset.Notes,
+                newAsset.OperationStartDate,
+                newAsset.OperationEndDate,
+                newAsset.DisposalDate
+            });
+
+            if (assetId <= 0)
+            {
+                return BadRequest("Failed to insert the asset.");
+            }
+
+            // Set the AssetID for further processing
+            newAsset.AssetId = assetId;
+
+            // Calculate depreciation schedule for the inserted asset
+            await CalculateDepreciationScheduleAsync(newAsset, connection);
+
+            return Ok(newAsset); // Return the newly inserted asset with depreciation details
         }
-
-        // Calculate depreciation schedule for the inserted asset
-        await CalculateDepreciationScheduleAsync(result, connection);
-
-        return Ok(result); // Return the newly inserted asset
+    }
+    catch (SqliteException ex)
+    {
+        return StatusCode(500, $"Database error: {ex.Message}");
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"An error occurred: {ex.Message}");
     }
 }
 
 private async Task CalculateDepreciationScheduleAsync(AssetItem asset, SqliteConnection connection)
 {
-    decimal currentValue = asset.Cost;
-    decimal depreciationAmountPerPeriod = (asset.DepreciationRate ?? 0) / 100 * asset.Cost;
+    decimal currentValue = asset.AssetCost; // Asset cost at the time of purchase
+    decimal depreciationAmountPerPeriod = (asset.DepreciationRate ?? 0) / 100 * asset.AssetCost;
 
     const string insertDepreciationQuery = @"
     INSERT INTO asset_depreciation_tb 
@@ -111,18 +127,18 @@ private async Task CalculateDepreciationScheduleAsync(AssetItem asset, SqliteCon
     VALUES 
     (@AssetID, @DepreciationDate, @DepreciationValue, @RemainingValue);";
 
-    // Handle depreciation based on the period type (year or month)
+    // Calculate depreciation based on the specified period type (yearly or monthly)
     if (asset.DepreciationPeriodType == "year")
     {
-        for (int i = 1; currentValue > 1; i += asset.DepreciationPeriodValue)
+        for (int year = 1; currentValue > 1; year += asset.DepreciationPeriodValue)
         {
             currentValue -= depreciationAmountPerPeriod;
-            if (currentValue < 1) currentValue = 1; // Ensure value does not go below 1
+            if (currentValue < 1) currentValue = 1; // Ensure value does not drop below 1
 
             await connection.ExecuteAsync(insertDepreciationQuery, new
             {
                 AssetID = asset.AssetId,
-                DepreciationDate = asset.DatePurchased.AddYears(i),
+                DepreciationDate = asset.DatePurchased.AddYears(year),
                 DepreciationValue = depreciationAmountPerPeriod,
                 RemainingValue = currentValue
             });
@@ -130,21 +146,22 @@ private async Task CalculateDepreciationScheduleAsync(AssetItem asset, SqliteCon
     }
     else if (asset.DepreciationPeriodType == "month")
     {
-        for (int i = 1; currentValue > 1; i += asset.DepreciationPeriodValue)
+        for (int month = 1; currentValue > 1; month += asset.DepreciationPeriodValue)
         {
             currentValue -= depreciationAmountPerPeriod;
-            if (currentValue < 1) currentValue = 1; // Ensure value does not go below 1
+            if (currentValue < 1) currentValue = 1; // Ensure value does not drop below 1
 
             await connection.ExecuteAsync(insertDepreciationQuery, new
             {
                 AssetID = asset.AssetId,
-                DepreciationDate = asset.DatePurchased.AddMonths(i),
+                DepreciationDate = asset.DatePurchased.AddMonths(month),
                 DepreciationValue = depreciationAmountPerPeriod,
                 RemainingValue = currentValue
             });
         }
     }
 }
+
 [HttpGet("ViewDepreciationSchedule")]
 public async Task<IActionResult> ViewDepreciationScheduleAsync(int assetId)
 {
