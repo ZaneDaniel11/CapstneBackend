@@ -26,17 +26,16 @@ namespace Backend.Controllers
                 return Ok(assets); // Return filtered assets based on CategoryID
             }
         }
-
-      
 [HttpPost("InsertAsset")]
 public async Task<IActionResult> InsertAssetAsync([FromBody] AssetItem newAsset)
 
 {
-    if (newAsset == null)
+     if (newAsset == null)
     {
+        Console.WriteLine("Received null newAsset.");
         return BadRequest("Payload is invalid or missing.");
     }
-
+      Console.WriteLine($"Received Asset: {System.Text.Json.JsonSerializer.Serialize(newAsset)}");
     const string insertQuery = @"
     INSERT INTO asset_item_db 
     (
@@ -179,8 +178,9 @@ public async Task<IActionResult> ViewDepreciationScheduleAsync(int assetId)
     }
 }
 
-     
-      
+
+
+
 
     }
 }

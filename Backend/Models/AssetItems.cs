@@ -1,6 +1,4 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System;
+
 namespace AssetItems.Models
 {
     
@@ -13,7 +11,7 @@ namespace AssetItems.Models
         public byte[] AssetQRCodeBlob { get; set; }  // Binary data for QR code
         public string AssetPicture { get; set; }  // Path to the asset's picture file
         public DateTime DatePurchased { get; set; }
-        public DateTime? DateIssued { get; set; }
+          public DateTime? DateIssued { get; set; } 
         public string IssuedTo { get; set; }
         public string AssetVendor { get; set; }  // Vendor details
         public string CheckedBy { get; set; }  // Person who checked the asset

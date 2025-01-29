@@ -248,3 +248,4 @@ C:\Users\Administrator\Desktop\CapstneBackend\backend\obj\Debug\net8.0\refint\Da
 C:\Users\Administrator\Desktop\CapstneBackend\backend\obj\Debug\net8.0\Daper.pdb
 C:\Users\Administrator\Desktop\CapstneBackend\backend\obj\Debug\net8.0\Daper.genruntimeconfig.cache
 C:\Users\Administrator\Desktop\CapstneBackend\backend\obj\Debug\net8.0\ref\Daper.dll
+C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\Daper.staticwebassets.runtime.json

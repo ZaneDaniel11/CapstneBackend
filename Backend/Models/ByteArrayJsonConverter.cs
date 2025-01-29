@@ -4,8 +4,10 @@ using System.Text.Json.Serialization;
 
 namespace AssetItems.Models // Ensure the namespace matches your project's structure
 {
+    
     public class ByteArrayJsonConverter : JsonConverter<byte[]>
     {
+        
         public override byte[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType == JsonTokenType.String)
