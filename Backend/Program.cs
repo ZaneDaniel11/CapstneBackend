@@ -1,7 +1,13 @@
+using AssetItems.Models; // Replace with the actual namespace of your project
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new ByteArrayJsonConverter());
+    });
 
 // Configure CORS
 builder.Services.AddCors(options =>

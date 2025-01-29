@@ -1,7 +1,9 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System;
-
 namespace AssetItems.Models
 {
+    
     public class AssetItem
     {
         public int AssetId { get; set; }  // Matches the AssetID primary key
@@ -37,4 +39,5 @@ namespace AssetItems.Models
             // Ensure proper spelling
     public string AssetPreventiveMaintenace { get; set; } // Number of months or years
     }
+    
 }

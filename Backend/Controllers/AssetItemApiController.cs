@@ -17,7 +17,7 @@ namespace Backend.Controllers
         [HttpGet("GetAssetsByCategory")]
         public async Task<IActionResult> GetAssetsByCategoryAsync(int categoryID)
         {
-            const string query = "SELECT * FROM asset_item_tb WHERE CategoryID = @CategoryID";
+            const string query = "SELECT * FROM  asset_item_db WHERE CategoryID = @CategoryID";
 
             using (var connection = new SqliteConnection(_connectionString))
             {

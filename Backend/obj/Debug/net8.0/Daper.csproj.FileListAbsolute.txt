@@ -202,6 +202,9 @@ C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\Swashbuck
 C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\System.IO.Pipelines.dll
+C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\System.Text.Encodings.Web.dll
+C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\System.Text.Json.dll
 C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a
 C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\runtimes\linux-arm\native\libe_sqlite3.so
 C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\runtimes\linux-arm64\native\libe_sqlite3.so
@@ -222,6 +225,7 @@ C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\runtimes\
 C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\runtimes\win-arm64\native\e_sqlite3.dll
 C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\runtimes\win-x64\native\e_sqlite3.dll
 C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\runtimes\win-x86\native\e_sqlite3.dll
+C:\Users\Administrator\Desktop\CapstneBackend\backend\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
 C:\Users\Administrator\Desktop\CapstneBackend\backend\obj\Debug\net8.0\Daper.csproj.AssemblyReference.cache
 C:\Users\Administrator\Desktop\CapstneBackend\backend\obj\Debug\net8.0\Daper.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\Administrator\Desktop\CapstneBackend\backend\obj\Debug\net8.0\Daper.AssemblyInfoInputs.cache
