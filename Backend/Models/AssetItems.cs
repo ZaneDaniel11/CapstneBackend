@@ -1,17 +1,18 @@
 
 namespace AssetItems.Models
 {
-    
+
     public class AssetItem
     {
         public int AssetId { get; set; }  // Matches the AssetID primary key
         public int CategoryID { get; set; }
         public string AssetName { get; set; }
         public string AssetQRCodePath { get; set; }  // Path to the QR code image file
-        public byte[] AssetQRCodeBlob { get; set; }  // Binary data for QR code
+        public byte[] AssetQRCodeBlob { get; set; }   // Binary data for QR code
+        public string AssetQRCodeBase64 { get; set; }
         public string AssetPicture { get; set; }  // Path to the asset's picture file
-        public DateTime DatePurchased { get; set; }
-          public DateTime? DateIssued { get; set; } 
+        public DateTime? DatePurchased { get; set; }
+        public DateTime? DateIssued { get; set; }
         public string IssuedTo { get; set; }
         public string AssetVendor { get; set; }  // Vendor details
         public string CheckedBy { get; set; }  // Person who checked the asset
@@ -24,7 +25,7 @@ namespace AssetItems.Models
         public string WarrantyVendor { get; set; }  // Vendor responsible for the warranty
         public string WarrantyContact { get; set; }  // Contact details for warranty vendor
         public string AssetStatus { get; set; }  // Current status of the asset
-       public string AssetStype { get; set; } // Type/category of the asset
+        public string AssetStype { get; set; } // Type/category of the asset
         public DateTime? PreventiveMaintenanceSchedule { get; set; }  // Next maintenance schedule
         public string Notes { get; set; }  // Additional notes for the asset
         public DateTime? OperationStartDate { get; set; }  // Start date of asset operation
@@ -33,9 +34,10 @@ namespace AssetItems.Models
         public decimal? DepreciationRate { get; set; }  // Depreciation rate (percentage)
         public decimal? DepreciationValue { get; set; }  // Depreciation value
         public string DepreciationPeriodType { get; set; }  // "month" or "year"
-        public int DepreciationPeriodValue { get; set; } 
-            // Ensure proper spelling
-    public string AssetPreventiveMaintenace { get; set; } // Number of months or years
+        public int DepreciationPeriodValue { get; set; }
+        // Ensure proper spelling
+        public string AssetPreventiveMaintenace { get; set; } // Number of months or years
+
     }
-    
+
 }
