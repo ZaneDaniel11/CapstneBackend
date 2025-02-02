@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "P2b4fVCFzg0f8rjBm2KTCrFc3CBoBdyZUtRG9oRRBgg=",
+  "Hash": "01kj4sMXY9y+AaBdxvxpJ8Oe+3am0mn6KbQ3GfzUQg8=",
   "Source": "Daper",
   "BasePath": "_content/Daper",
   "Mode": "Default",
@@ -10,7 +10,7 @@
     {
       "Name": "Daper\\wwwroot",
       "Source": "Daper",
-      "ContentRoot": "C:\\Users\\Administrator\\Desktop\\CapstneBackend\\backend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\Administrator\\Desktop\\CapstneBackend\\Backend\\wwwroot\\",
       "BasePath": "_content/Daper",
       "Pattern": "**"
     }

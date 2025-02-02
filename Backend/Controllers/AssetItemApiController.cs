@@ -26,38 +26,9 @@ namespace Backend.Controllers
                 var assets = await connection.QueryAsync<AssetItem>(query, new { CategoryID = categoryID });
 
                 // Convert byte[] to Base64 string for JSON response
-                foreach (var asset in assets)
-                {
-                    if (asset.AssetQRCodeBlob != null)
-                    {
-                        asset.AssetQRCodeBase64 = $"data:image/png;base64,{Convert.ToBase64String(asset.AssetQRCodeBlob)}";
-                    }
-                }
 
                 return Ok(assets);
             }
-        }
-        private static byte[] ConvertBase64ToBytes(string base64String)
-        {
-            if (string.IsNullOrEmpty(base64String))
-            {
-                return null;
-            }
-
-
-            string base64Data = Regex.Replace(base64String, @"^data:image\/[a-zA-Z]+;base64,", "");
-            Console.WriteLine($"Base64 Data After Stripping: {base64Data.Substring(0, 50)}..."); // Print first 50 chars for debugging
-
-            try
-            {
-                return Convert.FromBase64String(base64Data);
-            }
-            catch (FormatException ex)
-            {
-                Console.WriteLine("Base64 conversion failed: " + ex.Message);
-                return null;
-            }
-
         }
 
         [HttpPost("InsertAsset")]
@@ -68,22 +39,16 @@ namespace Backend.Controllers
                 Console.WriteLine("Received null newAsset.");
                 return BadRequest("Payload is invalid or missing.");
             }
-            if (!string.IsNullOrEmpty(newAsset.AssetQRCodeBase64))
-            {
-                newAsset.AssetQRCodeBlob = ConvertBase64ToBytes(newAsset.AssetQRCodeBase64);
-            }
-
-            Console.WriteLine($"Received Asset: {System.Text.Json.JsonSerializer.Serialize(newAsset)}");
 
             const string insertQuery = @"
             INSERT INTO asset_item_db 
-            (CategoryID, AssetQRCodePath, AssetQRCodeBlob, AssetName, AssetPicture, DatePurchased, 
+            (CategoryID ,  AssetName, AssetPicture, DatePurchased, 
             DateIssued, IssuedTo, AssetVendor, CheckedBy, AssetCost, AssetCode, Remarks, 
             AssetLocation, WarrantyStartDate, WarrantyExpirationDate, WarrantyVendor, WarrantyContact, 
             AssetStatus, AssetStype, AssetPreventiveMaintenace, Notes, OperationStartDate, 
             OperationEndDate, DisposalDate) 
             VALUES 
-            (@CategoryID, @AssetQRCodePath, @AssetQRCodeBlob, @AssetName, @AssetPicture, @DatePurchased, 
+            (@CategoryID,  @AssetName, @AssetPicture, @DatePurchased, 
             @DateIssued, @IssuedTo, @AssetVendor, @CheckedBy, @AssetCost, @AssetCode, @Remarks, 
             @AssetLocation, @WarrantyStartDate, @WarrantyExpirationDate, @WarrantyVendor, @WarrantyContact, 
             @AssetStatus, @AssetStype, @AssetPreventiveMaintenace, @Notes, @OperationStartDate, 

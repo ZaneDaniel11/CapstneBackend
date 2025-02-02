@@ -7,9 +7,7 @@ namespace AssetItems.Models
         public int AssetId { get; set; }  // Matches the AssetID primary key
         public int CategoryID { get; set; }
         public string AssetName { get; set; }
-        public string AssetQRCodePath { get; set; }  // Path to the QR code image file
-        public byte[] AssetQRCodeBlob { get; set; }   // Binary data for QR code
-        public string AssetQRCodeBase64 { get; set; }
+
         public string AssetPicture { get; set; }  // Path to the asset's picture file
         public DateTime? DatePurchased { get; set; }
         public DateTime? DateIssued { get; set; }
