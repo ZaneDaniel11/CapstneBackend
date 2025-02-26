@@ -1690,19 +1690,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Administrator\\.nuget\\packages\\": {}
+    "C:\\Users\\PHCRMC-003\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Administrator\\Desktop\\CapstneBackend\\Backend\\Daper.csproj",
+      "projectUniqueName": "C:\\Github\\CapstneBackend\\Backend\\Daper.csproj",
       "projectName": "Daper",
-      "projectPath": "C:\\Users\\Administrator\\Desktop\\CapstneBackend\\Backend\\Daper.csproj",
-      "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Administrator\\Desktop\\CapstneBackend\\Backend\\obj\\",
+      "projectPath": "C:\\Github\\CapstneBackend\\Backend\\Daper.csproj",
+      "packagesPath": "C:\\Users\\PHCRMC-003\\.nuget\\packages\\",
+      "outputPath": "C:\\Github\\CapstneBackend\\Backend\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\PHCRMC-003\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -1720,6 +1720,11 @@
         "warnAsError": [
           "NU1605"
         ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -1778,7 +1783,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.100/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.406/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

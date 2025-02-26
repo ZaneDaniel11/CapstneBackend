@@ -1,19 +1,11 @@
 {
   "Version": 1,
-  "Hash": "P2b4fVCFzg0f8rjBm2KTCrFc3CBoBdyZUtRG9oRRBgg=",
+  "Hash": "hPfayVwJ4VOUYVzwwLlpHVpWdf1ZHiPuvQo/c53qQsM=",
   "Source": "Daper",
   "BasePath": "_content/Daper",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [
-    {
-      "Name": "Daper\\wwwroot",
-      "Source": "Daper",
-      "ContentRoot": "C:\\Users\\Administrator\\Desktop\\CapstneBackend\\backend\\wwwroot\\",
-      "BasePath": "_content/Daper",
-      "Pattern": "**"
-    }
-  ],
+  "DiscoveryPatterns": [],
   "Assets": []
 }
