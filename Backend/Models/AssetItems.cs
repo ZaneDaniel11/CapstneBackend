@@ -2,6 +2,14 @@
 namespace AssetItems.Models
 {
 
+
+  public class AssetTransferRequest
+    {
+        public int AssetID { get; set; }
+        public string NewOwner { get; set; }
+        public string NewLocation { get; set; }
+        public string Remarks { get; set; }
+    }
     public class AssetItem
     {
         public int AssetId { get; set; }  // Matches the AssetID primary key
@@ -37,5 +45,6 @@ namespace AssetItems.Models
         public string AssetPreventiveMaintenace { get; set; } // Number of months or years
 
     }
+   
 
 }
