@@ -104,6 +104,47 @@ namespace Backend.Controllers
             }
         }
     
+    [HttpPut("UpdateAssetStatus/{assetId}")]
+public async Task<IActionResult> UpdateAssetStatusAsync(int assetId, [FromBody] string newStatus)
+{
+    if (string.IsNullOrWhiteSpace(newStatus))
+    {
+        return BadRequest("Status cannot be empty.");
+    }
+
+    const string updateQuery = @"
+    UPDATE asset_item_db 
+    SET AssetStatus = @AssetStatus 
+    WHERE AssetID = @AssetID";
+
+    try
+    {
+        using (var connection = new SqliteConnection(_connectionString))
+        {
+            connection.Open();
+
+            int rowsAffected = await connection.ExecuteAsync(updateQuery, new { AssetStatus = newStatus, AssetID = assetId });
+
+            if (rowsAffected > 0)
+            {
+                return Ok(new { message = "Asset status updated successfully.", assetId, newStatus });
+            }
+            else
+            {
+                return NotFound("Asset not found.");
+            }
+        }
+    }
+    catch (SqliteException ex)
+    {
+        return StatusCode(500, $"Database error: {ex.Message}");
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"An error occurred: {ex.Message}");
+    }
+}
+
         [HttpPost("InsertAsset")]
         public async Task<IActionResult> InsertAssetAsync([FromBody] AssetItem newAsset)
         {
