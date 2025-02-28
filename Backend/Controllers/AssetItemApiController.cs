@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using AssetItems.Models;
+using AssetHistory.Models;
 using System.Threading.Tasks;
 using System;
 using System.Text.RegularExpressions;
+
 
 namespace Backend.Controllers
 {
