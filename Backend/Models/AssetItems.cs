@@ -9,6 +9,7 @@ namespace AssetItems.Models
         public string NewOwner { get; set; }
         public string NewLocation { get; set; }
         public string Remarks { get; set; }
+        public string PerformedBy { get; set; } 
     }
     public class AssetItem
     {
