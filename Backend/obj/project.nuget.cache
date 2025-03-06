@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "y99+0QZcfJ0=",
+  "dgSpecHash": "axSFnGM10y8=",
   "success": true,
-  "projectFilePath": "C:\\Github\\CapstneBackend\\backend\\Daper.csproj",
+  "projectFilePath": "C:\\Github\\CapstneBackend\\Backend\\Daper.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\PHCRMC-003\\.nuget\\packages\\dapper\\2.1.35\\dapper.2.1.35.nupkg.sha512",
     "C:\\Users\\PHCRMC-003\\.nuget\\packages\\microsoft.aspnetcore.cors\\2.2.0\\microsoft.aspnetcore.cors.2.2.0.nupkg.sha512",
