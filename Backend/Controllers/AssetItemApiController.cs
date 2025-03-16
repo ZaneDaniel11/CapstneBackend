@@ -80,7 +80,79 @@ public async Task<IActionResult> GetAssetCategorySummary(DateTime? startDate = n
     }
 }
 
+[HttpGet("asset-category-summary-detailed")]
+public async Task<IActionResult> GetAssetCategorySummaryDetailed(DateTime? startDate = null, DateTime? endDate = null)
+{
+    using (var connection = new SqliteConnection(_connectionString))
+    {
+        await connection.OpenAsync();
 
+        string query;
+
+        if (startDate.HasValue && endDate.HasValue)
+        {
+            query = @"
+                WITH RelevantDepreciation AS (
+                    SELECT d.AssetID, d.RemainingValue, d.DepreciationDate
+                    FROM asset_depreciation_tb d
+                    INNER JOIN (
+                        SELECT AssetID, MAX(DepreciationDate) AS MaxDate
+                        FROM asset_depreciation_tb
+                        WHERE DepreciationDate <= @EndDate
+                        GROUP BY AssetID
+                    ) latest ON d.AssetID = latest.AssetID AND d.DepreciationDate = latest.MaxDate
+                    WHERE d.DepreciationDate >= @StartDate
+                )
+                SELECT 
+                    ac.CategoryId,
+                    ac.CategoryName, 
+                    a.AssetID,
+                    a.AssetName,
+                    a.AssetCode,
+                    a.DatePurchased,
+                    a.AssetCost,
+                    rd.DepreciationDate,
+                    COALESCE(CAST(rd.RemainingValue AS REAL), a.AssetCost * 1.0) AS RemainingValue
+                FROM asset_category_tb ac
+                LEFT JOIN asset_item_db a ON ac.CategoryId = a.CategoryID
+                LEFT JOIN RelevantDepreciation rd ON a.AssetID = rd.AssetID
+                ORDER BY ac.CategoryName, a.AssetName;";
+
+            var result = await connection.QueryAsync(query, new { StartDate = startDate, EndDate = endDate });
+            return Ok(result);
+        }
+        else
+        {
+            query = @"
+                WITH LatestDepreciation AS (
+                    SELECT d.AssetID, d.RemainingValue, d.DepreciationDate
+                    FROM asset_depreciation_tb d
+                    INNER JOIN (
+                        SELECT AssetID, MAX(DepreciationDate) AS MaxDate
+                        FROM asset_depreciation_tb
+                        GROUP BY AssetID
+                    ) latest ON d.AssetID = latest.AssetID AND d.DepreciationDate = latest.MaxDate
+                )
+                SELECT 
+                    ac.CategoryId,
+                    ac.CategoryName, 
+                    a.AssetID,
+                    a.AssetName,
+                    a.AssetCode,
+                    a.DatePurchased,
+                    a.AssetCost,
+                    ld.DepreciationDate,
+                    COALESCE(CAST(ld.RemainingValue AS REAL), a.AssetCost * 1.0) AS RemainingValue
+                FROM asset_category_tb ac
+                LEFT JOIN asset_item_db a ON ac.CategoryId = a.CategoryID
+                LEFT JOIN LatestDepreciation ld ON a.AssetID = ld.AssetID
+                ORDER BY ac.CategoryName, a.AssetName;";
+
+            var result = await connection.QueryAsync(query);
+            return Ok(result);
+        }
+    }
+}
 
         // GET: api/AssetApi/GetAssetsByCategory?categoryID=1
         [HttpGet("GetAssetsByCategory")]
