@@ -16,8 +16,9 @@ namespace Backend.Controllers
     {
 
         private readonly string _connectionString = "Data Source=capstone.db";
+        
 
-         [HttpGet("asset-category-summary")]
+        [HttpGet("asset-category-summary")]
         public async Task<IActionResult> GetAssetCategorySummary()
         {
             using (var connection = new SqliteConnection(_connectionString))
