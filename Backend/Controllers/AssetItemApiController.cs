@@ -17,6 +17,23 @@ namespace Backend.Controllers
 
         private readonly string _connectionString = "Data Source=capstone.db";
 
+         [HttpGet("asset-category-summary")]
+        public async Task<IActionResult> GetAssetCategorySummary()
+        {
+            using (var connection = new SqliteConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+                string query = @"
+                    SELECT c.CategoryName, COUNT(a.AssetID) as Count
+                    FROM category_tb c
+                    LEFT JOIN asset_item_db a ON c.Id = a.CategoryID
+                    GROUP BY c.CategoryName";
+                
+                var result = (await connection.QueryAsync(query)).ToList();
+                return Ok(result);
+            }
+        }
+
         // GET: api/AssetApi/GetAssetsByCategory?categoryID=1
         [HttpGet("GetAssetsByCategory")]
         public async Task<IActionResult> GetAssetsByCategoryAsync(int categoryID)
