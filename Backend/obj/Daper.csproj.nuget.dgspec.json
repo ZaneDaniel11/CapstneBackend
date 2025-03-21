@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Github\\CapstneBackend\\Backend\\Daper.csproj": {}
+    "C:\\Github\\CapstneBackend\\backend\\Daper.csproj": {}
   },
   "projects": {
-    "C:\\Github\\CapstneBackend\\Backend\\Daper.csproj": {
+    "C:\\Github\\CapstneBackend\\backend\\Daper.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Github\\CapstneBackend\\Backend\\Daper.csproj",
+        "projectUniqueName": "C:\\Github\\CapstneBackend\\backend\\Daper.csproj",
         "projectName": "Daper",
-        "projectPath": "C:\\Github\\CapstneBackend\\Backend\\Daper.csproj",
+        "projectPath": "C:\\Github\\CapstneBackend\\backend\\Daper.csproj",
         "packagesPath": "C:\\Users\\PHCRMC-003\\.nuget\\packages\\",
-        "outputPath": "C:\\Github\\CapstneBackend\\Backend\\obj\\",
+        "outputPath": "C:\\Github\\CapstneBackend\\backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\PHCRMC-003\\AppData\\Roaming\\NuGet\\NuGet.Config"
