@@ -300,20 +300,28 @@ namespace Backend.Controllers
 
 
         [HttpGet("ViewDepreciationSchedule")]
-        public async Task<IActionResult> ViewDepreciationScheduleAsync(int assetId)
-        {
-            const string query = @"
-    SELECT DepreciationDate, DepreciationValue, RemainingValue 
+public async Task<IActionResult> ViewDepreciationScheduleAsync(int assetId)
+{
+    const string query = @"
+    SELECT DepreciationDate, DepreciationValue, RemainingValue, 
+           DepreciationRate, DepreciationPeriodType, DepreciationPeriodValue
     FROM asset_depreciation_tb 
     WHERE AssetID = @AssetID
     ORDER BY DepreciationDate ASC";
 
-            using (var connection = new SqliteConnection(_connectionString))
-            {
-                connection.Open();
-                var depreciationSchedule = await connection.QueryAsync(query, new { AssetID = assetId });
-                return Ok(depreciationSchedule); // Return all depreciation records for this asset
-            }
+    using (var connection = new SqliteConnection(_connectionString))
+    {
+        await connection.OpenAsync();
+        var depreciationSchedule = await connection.QueryAsync(query, new { AssetID = assetId });
+
+        if (!depreciationSchedule.Any())
+        {
+            return NotFound($"No depreciation records found for AssetID {assetId}.");
         }
+
+        return Ok(depreciationSchedule); 
+    }
+}
+
     }
 }
