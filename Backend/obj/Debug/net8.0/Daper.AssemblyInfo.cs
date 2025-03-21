@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Daper")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3114bd37d3b1702634c7f6c34d7117d19c7aa069")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+05bd3574c9f028707c5e803d1287ddbbb1b7879a")]
 [assembly: System.Reflection.AssemblyProductAttribute("Daper")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Daper")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

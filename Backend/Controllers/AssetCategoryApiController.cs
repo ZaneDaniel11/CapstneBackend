@@ -12,7 +12,7 @@ namespace Backend.Controllers
     {
         private readonly string _connectionString = "Data Source=capstone.db";
 
- 
+
 
         [HttpGet("GetAssetCategory")]
         public async Task<IActionResult> GetAsssetCategoryAsync()
@@ -27,22 +27,22 @@ namespace Backend.Controllers
             }
         }
 
-      [HttpPost("InsertAssetCategory")]
-    public async Task<IActionResult> InsertAsssetCategoryAsync(AssetCategory cat)
-    {
-        const string query = @"
+        [HttpPost("InsertAssetCategory")]
+        public async Task<IActionResult> InsertAsssetCategoryAsync(AssetCategory cat)
+        {
+            const string query = @"
             INSERT INTO asset_category_tb (CategoryName) 
             VALUES (@CategoryName);
             SELECT last_insert_rowid() AS CategoryId;";  // Fetch the last inserted ID
 
-        using (var connection = new SqliteConnection(_connectionString))
-        {
-            connection.Open();
-            var newCategoryId = await connection.ExecuteScalarAsync<int>(query, new { CategoryName = cat.CategoryName });
-            cat.CategoryId = newCategoryId;  // Assign the new CategoryId back to the category object
-            return Ok(cat);  // Return the full category object, including its new CategoryId
+            using (var connection = new SqliteConnection(_connectionString))
+            {
+                connection.Open();
+                var newCategoryId = await connection.ExecuteScalarAsync<int>(query, new { CategoryName = cat.CategoryName });
+                cat.CategoryId = newCategoryId;  // Assign the new CategoryId back to the category object
+                return Ok(cat);  // Return the full category object, including its new CategoryId
+            }
         }
-    }
 
 
         [HttpDelete("DeleteAssetCategory")]
