@@ -17,13 +17,13 @@ namespace Backend.Controllers
 
         private readonly string _connectionString = "Data Source=capstone.db";
 
- [HttpGet("asset-category-summary")]
+        [HttpGet("asset-category-summary")]
         public async Task<IActionResult> GetAssetCategorySummary()
         {
             using (var connection = new SqliteConnection(_connectionString))
             {
                 await connection.OpenAsync();
-                
+
                 string query = @"
                     SELECT 
                         c.CategoryName, 
@@ -43,7 +43,7 @@ namespace Backend.Controllers
                 return Ok(result);
             }
         }
-    
+
 
         // GET: api/AssetApi/GetAssetsByCategory?categoryID=1
         [HttpGet("GetAssetsByCategory")]
@@ -202,25 +202,25 @@ namespace Backend.Controllers
             }
 
             const string insertQuery = @"
-            INSERT INTO asset_item_db 
-            (CategoryID ,  AssetName, AssetPicture, DatePurchased, 
-            DateIssued, IssuedTo, AssetVendor, CheckedBy, AssetCost, AssetCode, Remarks, 
-            AssetLocation, WarrantyStartDate, WarrantyExpirationDate, WarrantyVendor, WarrantyContact, 
-            AssetStatus, AssetStype, AssetPreventiveMaintenace, Notes, OperationStartDate, 
-            OperationEndDate, DisposalDate) 
-            VALUES 
-            (@CategoryID,  @AssetName, @AssetPicture, @DatePurchased, 
-            @DateIssued, @IssuedTo, @AssetVendor, @CheckedBy, @AssetCost, @AssetCode, @Remarks, 
-            @AssetLocation, @WarrantyStartDate, @WarrantyExpirationDate, @WarrantyVendor, @WarrantyContact, 
-            @AssetStatus, @AssetStype, @AssetPreventiveMaintenace, @Notes, @OperationStartDate, 
-            @OperationEndDate, @DisposalDate);
-            SELECT last_insert_rowid() AS AssetID;";
+    INSERT INTO asset_item_db 
+    (CategoryID, AssetName, AssetPicture, DatePurchased, DateIssued, IssuedTo, 
+     AssetVendor, CheckedBy, AssetCost, AssetCode, Remarks, AssetLocation, 
+     WarrantyStartDate, WarrantyExpirationDate, WarrantyVendor, WarrantyContact, 
+     AssetStatus, AssetStype, AssetPreventiveMaintenace, Notes, OperationStartDate, 
+     OperationEndDate, DisposalDate, DepreciationRate, DepreciationPeriodType, DepreciationPeriodValue) 
+    VALUES 
+    (@CategoryID, @AssetName, @AssetPicture, @DatePurchased, @DateIssued, @IssuedTo, 
+     @AssetVendor, @CheckedBy, @AssetCost, @AssetCode, @Remarks, @AssetLocation, 
+     @WarrantyStartDate, @WarrantyExpirationDate, @WarrantyVendor, @WarrantyContact, 
+     @AssetStatus, @AssetStype, @AssetPreventiveMaintenace, @Notes, @OperationStartDate, 
+     @OperationEndDate, @DisposalDate, @DepreciationRate, @DepreciationPeriodType, @DepreciationPeriodValue);
+    SELECT last_insert_rowid() AS AssetID;";
 
             try
             {
                 using (var connection = new SqliteConnection(_connectionString))
                 {
-                    connection.Open();
+                    await connection.OpenAsync();
 
                     var assetId = await connection.ExecuteScalarAsync<int>(insertQuery, newAsset);
 
@@ -231,6 +231,7 @@ namespace Backend.Controllers
 
                     newAsset.AssetId = assetId;
 
+                    // Calculate and insert depreciation if applicable
                     if (newAsset.DepreciationRate.HasValue && newAsset.DepreciationPeriodValue > 0)
                     {
                         await CalculateDepreciationScheduleAsync(newAsset, connection);
@@ -262,38 +263,34 @@ namespace Backend.Controllers
 
             const string insertDepreciationQuery = @"
     INSERT INTO asset_depreciation_tb 
-    (AssetID, DepreciationDate, DepreciationValue, RemainingValue) 
+    (AssetID, DepreciationDate, DepreciationValue, RemainingValue, DepreciationRate, DepreciationPeriodType, DepreciationPeriodValue) 
     VALUES 
-    (@AssetID, @DepreciationDate, @DepreciationValue, @RemainingValue);";
+    (@AssetID, @DepreciationDate, @DepreciationValue, @RemainingValue, @DepreciationRate, @DepreciationPeriodType, @DepreciationPeriodValue);";
 
-            if (asset.DepreciationPeriodType == "year")
+            DateTime depreciationDate = asset.DatePurchased.Value;
+
+            while (currentValue > 1)
             {
-                for (int year = asset.DepreciationPeriodValue; currentValue > 1; year += asset.DepreciationPeriodValue)
-                {
-                    currentValue = Math.Max(1, currentValue - depreciationAmountPerPeriod);
+                currentValue = Math.Max(1, currentValue - depreciationAmountPerPeriod);
 
-                    await connection.ExecuteAsync(insertDepreciationQuery, new
-                    {
-                        AssetID = asset.AssetId,
-                        DepreciationDate = asset.DatePurchased.Value.AddYears(year),
-                        DepreciationValue = depreciationAmountPerPeriod,
-                        RemainingValue = currentValue
-                    });
+                await connection.ExecuteAsync(insertDepreciationQuery, new
+                {
+                    AssetID = asset.AssetId,
+                    DepreciationDate = depreciationDate,
+                    DepreciationValue = depreciationAmountPerPeriod,
+                    RemainingValue = currentValue,
+                    DepreciationRate = asset.DepreciationRate.Value,
+                    DepreciationPeriodType = asset.DepreciationPeriodType,
+                    DepreciationPeriodValue = asset.DepreciationPeriodValue
+                });
+
+                if (asset.DepreciationPeriodType == "year")
+                {
+                    depreciationDate = depreciationDate.AddYears(asset.DepreciationPeriodValue);
                 }
-            }
-            else if (asset.DepreciationPeriodType == "month")
-            {
-                for (int month = asset.DepreciationPeriodValue; currentValue > 1; month += asset.DepreciationPeriodValue)
+                else if (asset.DepreciationPeriodType == "month")
                 {
-                    currentValue = Math.Max(1, currentValue - depreciationAmountPerPeriod);
-
-                    await connection.ExecuteAsync(insertDepreciationQuery, new
-                    {
-                        AssetID = asset.AssetId,
-                        DepreciationDate = asset.DatePurchased.Value.AddMonths(month),
-                        DepreciationValue = depreciationAmountPerPeriod,
-                        RemainingValue = currentValue
-                    });
+                    depreciationDate = depreciationDate.AddMonths(asset.DepreciationPeriodValue);
                 }
             }
         }
