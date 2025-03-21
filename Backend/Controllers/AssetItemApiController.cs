@@ -207,13 +207,13 @@ namespace Backend.Controllers
      AssetVendor, CheckedBy, AssetCost, AssetCode, Remarks, AssetLocation, 
      WarrantyStartDate, WarrantyExpirationDate, WarrantyVendor, WarrantyContact, 
      AssetStatus, AssetStype, AssetPreventiveMaintenace, Notes, OperationStartDate, 
-     OperationEndDate, DisposalDate, DepreciationRate, DepreciationPeriodType, DepreciationPeriodValue) 
+     OperationEndDate, DisposalDate) 
     VALUES 
     (@CategoryID, @AssetName, @AssetPicture, @DatePurchased, @DateIssued, @IssuedTo, 
      @AssetVendor, @CheckedBy, @AssetCost, @AssetCode, @Remarks, @AssetLocation, 
      @WarrantyStartDate, @WarrantyExpirationDate, @WarrantyVendor, @WarrantyContact, 
      @AssetStatus, @AssetStype, @AssetPreventiveMaintenace, @Notes, @OperationStartDate, 
-     @OperationEndDate, @DisposalDate, @DepreciationRate, @DepreciationPeriodType, @DepreciationPeriodValue);
+     @OperationEndDate, @DisposalDate);
     SELECT last_insert_rowid() AS AssetID;";
 
             try
@@ -250,50 +250,54 @@ namespace Backend.Controllers
             }
         }
 
-        private async Task CalculateDepreciationScheduleAsync(AssetItem asset, SqliteConnection connection)
-        {
-            if (!asset.DatePurchased.HasValue || asset.DepreciationRate == null || asset.DepreciationPeriodValue <= 0)
-            {
-                Console.WriteLine("Depreciation cannot be calculated due to missing values.");
-                return;
-            }
+       private async Task CalculateDepreciationScheduleAsync(AssetItem asset, SqliteConnection connection)
+{
+    if (!asset.DatePurchased.HasValue || asset.DepreciationRate == null || asset.DepreciationPeriodValue <= 0)
+    {
+        Console.WriteLine("Depreciation cannot be calculated due to missing values.");
+        return;
+    }
 
-            decimal currentValue = asset.AssetCost;
-            decimal depreciationAmountPerPeriod = (asset.DepreciationRate.Value / 100) * asset.AssetCost;
+    decimal currentValue = asset.AssetCost;
+    decimal depreciationAmountPerPeriod = (asset.DepreciationRate.Value / 100) * asset.AssetCost;
 
-            const string insertDepreciationQuery = @"
+    const string insertDepreciationQuery = @"
     INSERT INTO asset_depreciation_tb 
     (AssetID, DepreciationDate, DepreciationValue, RemainingValue, DepreciationRate, DepreciationPeriodType, DepreciationPeriodValue) 
     VALUES 
     (@AssetID, @DepreciationDate, @DepreciationValue, @RemainingValue, @DepreciationRate, @DepreciationPeriodType, @DepreciationPeriodValue);";
 
-            DateTime depreciationDate = asset.DatePurchased.Value;
+    DateTime depreciationDate = asset.DatePurchased.Value;
 
-            while (currentValue > 1)
-            {
-                currentValue = Math.Max(1, currentValue - depreciationAmountPerPeriod);
+    while (currentValue > 1)
+    {
+        currentValue = Math.Max(1, currentValue - depreciationAmountPerPeriod);
 
-                await connection.ExecuteAsync(insertDepreciationQuery, new
-                {
-                    AssetID = asset.AssetId,
-                    DepreciationDate = depreciationDate,
-                    DepreciationValue = depreciationAmountPerPeriod,
-                    RemainingValue = currentValue,
-                    DepreciationRate = asset.DepreciationRate.Value,
-                    DepreciationPeriodType = asset.DepreciationPeriodType,
-                    DepreciationPeriodValue = asset.DepreciationPeriodValue
-                });
+        Console.WriteLine($"Inserting Depreciation Record: AssetID={asset.AssetId}, Date={depreciationDate}, Value={depreciationAmountPerPeriod}, Remaining={currentValue}, Rate={asset.DepreciationRate}, PeriodType={asset.DepreciationPeriodType}, PeriodValue={asset.DepreciationPeriodValue}");
 
-                if (asset.DepreciationPeriodType == "year")
-                {
-                    depreciationDate = depreciationDate.AddYears(asset.DepreciationPeriodValue);
-                }
-                else if (asset.DepreciationPeriodType == "month")
-                {
-                    depreciationDate = depreciationDate.AddMonths(asset.DepreciationPeriodValue);
-                }
-            }
+        await connection.ExecuteAsync(insertDepreciationQuery, new
+        {
+            AssetID = asset.AssetId,
+            DepreciationDate = depreciationDate,
+            DepreciationValue = depreciationAmountPerPeriod,
+            RemainingValue = currentValue,
+            DepreciationRate = asset.DepreciationRate.Value,
+            DepreciationPeriodType = asset.DepreciationPeriodType ?? "year", // Default to "year"
+            DepreciationPeriodValue = asset.DepreciationPeriodValue > 0 ? asset.DepreciationPeriodValue : 1 // Default to 1 if missing
+        });
+
+        // Adjust Depreciation Date
+        if (asset.DepreciationPeriodType == "year")
+        {
+            depreciationDate = depreciationDate.AddYears(asset.DepreciationPeriodValue);
         }
+        else if (asset.DepreciationPeriodType == "month")
+        {
+            depreciationDate = depreciationDate.AddMonths(asset.DepreciationPeriodValue);
+        }
+    }
+}
+
 
         [HttpGet("ViewDepreciationSchedule")]
         public async Task<IActionResult> ViewDepreciationScheduleAsync(int assetId)
