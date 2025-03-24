@@ -17,32 +17,36 @@ namespace Backend.Controllers
 
         private readonly string _connectionString = "Data Source=capstone.db";
 
-        [HttpGet("asset-category-summary")]
-        public async Task<IActionResult> GetAssetCategorySummary()
-        {
-            using (var connection = new SqliteConnection(_connectionString))
-            {
-                await connection.OpenAsync();
+       [HttpGet("asset-category-summary")]
+public async Task<IActionResult> GetAssetCategorySummary()
+{
+    using (var connection = new SqliteConnection(_connectionString))
+    {
+        await connection.OpenAsync();
 
-                string query = @"
-                    SELECT 
-                        c.CategoryName, 
-                        COUNT(a.AssetID) AS AssetCount,
-                        COALESCE(SUM(a.AssetCost), 0) AS TotalCost,
-                        COALESCE(SUM(
-                            a.AssetCost * 
-                            (1 - (a.DepreciationRate / 100.0) * 
-                            (strftime('%Y', 'now') - strftime('%Y', a.DatePurchased)))
-                        ), 0) AS CurrentTotalValue
-                    FROM category_tb c
-                    LEFT JOIN asset_item_db a ON c.Id = a.CategoryID
-                    GROUP BY c.CategoryName
-                    ORDER BY TotalCost DESC";
+        string query = @"
+WITH LatestDepreciation AS (
+    SELECT d.AssetID, d.RemainingValue
+    FROM asset_depreciation_tb d
+    INNER JOIN (
+        SELECT AssetID, MAX(DepreciationDate) AS MaxDate
+        FROM asset_depreciation_tb
+        GROUP BY AssetID
+    ) latest ON d.AssetID = latest.AssetID AND d.DepreciationDate = latest.MaxDate
+)
+SELECT 
+    ac.CategoryName, 
+    COUNT(a.AssetID) AS AssetCount,
+    SUM(COALESCE(CAST(ld.RemainingValue AS REAL), a.AssetCost * 1.0)) AS CurrentTotalValue
+FROM asset_category_tb ac
+LEFT JOIN asset_item_db a ON ac.CategoryId = a.CategoryID
+LEFT JOIN LatestDepreciation ld ON a.AssetID = ld.AssetID
+GROUP BY ac.CategoryName;";
 
-                var result = await connection.QueryAsync(query);
-                return Ok(result);
-            }
-        }
+        var result = await connection.QueryAsync(query);
+        return Ok(result);
+    }
+}
 
 
         // GET: api/AssetApi/GetAssetsByCategory?categoryID=1
@@ -250,78 +254,78 @@ namespace Backend.Controllers
             }
         }
 
-       private async Task CalculateDepreciationScheduleAsync(AssetItem asset, SqliteConnection connection)
-{
-    if (!asset.DatePurchased.HasValue || asset.DepreciationRate == null || asset.DepreciationPeriodValue <= 0)
-    {
-        Console.WriteLine("Depreciation cannot be calculated due to missing values.");
-        return;
-    }
+        private async Task CalculateDepreciationScheduleAsync(AssetItem asset, SqliteConnection connection)
+        {
+            if (!asset.DatePurchased.HasValue || asset.DepreciationRate == null || asset.DepreciationPeriodValue <= 0)
+            {
+                Console.WriteLine("Depreciation cannot be calculated due to missing values.");
+                return;
+            }
 
-    decimal currentValue = asset.AssetCost;
-    decimal depreciationAmountPerPeriod = (asset.DepreciationRate.Value / 100) * asset.AssetCost;
+            decimal currentValue = asset.AssetCost;
+            decimal depreciationAmountPerPeriod = (asset.DepreciationRate.Value / 100) * asset.AssetCost;
 
-    const string insertDepreciationQuery = @"
+            const string insertDepreciationQuery = @"
     INSERT INTO asset_depreciation_tb 
     (AssetID, DepreciationDate, DepreciationValue, RemainingValue, DepreciationRate, DepreciationPeriodType, DepreciationPeriodValue) 
     VALUES 
     (@AssetID, @DepreciationDate, @DepreciationValue, @RemainingValue, @DepreciationRate, @DepreciationPeriodType, @DepreciationPeriodValue);";
 
-    DateTime depreciationDate = asset.DatePurchased.Value;
+            DateTime depreciationDate = asset.DatePurchased.Value;
 
-    while (currentValue > 1)
-    {
-        currentValue = Math.Max(1, currentValue - depreciationAmountPerPeriod);
+            while (currentValue > 1)
+            {
+                currentValue = Math.Max(1, currentValue - depreciationAmountPerPeriod);
 
-        Console.WriteLine($"Inserting Depreciation Record: AssetID={asset.AssetId}, Date={depreciationDate}, Value={depreciationAmountPerPeriod}, Remaining={currentValue}, Rate={asset.DepreciationRate}, PeriodType={asset.DepreciationPeriodType}, PeriodValue={asset.DepreciationPeriodValue}");
+                Console.WriteLine($"Inserting Depreciation Record: AssetID={asset.AssetId}, Date={depreciationDate}, Value={depreciationAmountPerPeriod}, Remaining={currentValue}, Rate={asset.DepreciationRate}, PeriodType={asset.DepreciationPeriodType}, PeriodValue={asset.DepreciationPeriodValue}");
 
-        await connection.ExecuteAsync(insertDepreciationQuery, new
-        {
-            AssetID = asset.AssetId,
-            DepreciationDate = depreciationDate,
-            DepreciationValue = depreciationAmountPerPeriod,
-            RemainingValue = currentValue,
-            DepreciationRate = asset.DepreciationRate.Value,
-            DepreciationPeriodType = asset.DepreciationPeriodType ?? "year", // Default to "year"
-            DepreciationPeriodValue = asset.DepreciationPeriodValue > 0 ? asset.DepreciationPeriodValue : 1 // Default to 1 if missing
-        });
+                await connection.ExecuteAsync(insertDepreciationQuery, new
+                {
+                    AssetID = asset.AssetId,
+                    DepreciationDate = depreciationDate,
+                    DepreciationValue = depreciationAmountPerPeriod,
+                    RemainingValue = currentValue,
+                    DepreciationRate = asset.DepreciationRate.Value,
+                    DepreciationPeriodType = asset.DepreciationPeriodType ?? "year", // Default to "year"
+                    DepreciationPeriodValue = asset.DepreciationPeriodValue > 0 ? asset.DepreciationPeriodValue : 1 // Default to 1 if missing
+                });
 
-        // Adjust Depreciation Date
-        if (asset.DepreciationPeriodType == "year")
-        {
-            depreciationDate = depreciationDate.AddYears(asset.DepreciationPeriodValue);
+                // Adjust Depreciation Date
+                if (asset.DepreciationPeriodType == "year")
+                {
+                    depreciationDate = depreciationDate.AddYears(asset.DepreciationPeriodValue);
+                }
+                else if (asset.DepreciationPeriodType == "month")
+                {
+                    depreciationDate = depreciationDate.AddMonths(asset.DepreciationPeriodValue);
+                }
+            }
         }
-        else if (asset.DepreciationPeriodType == "month")
-        {
-            depreciationDate = depreciationDate.AddMonths(asset.DepreciationPeriodValue);
-        }
-    }
-}
 
 
         [HttpGet("ViewDepreciationSchedule")]
-public async Task<IActionResult> ViewDepreciationScheduleAsync(int assetId)
-{
-    const string query = @"
+        public async Task<IActionResult> ViewDepreciationScheduleAsync(int assetId)
+        {
+            const string query = @"
     SELECT DepreciationDate, DepreciationValue, RemainingValue, 
            DepreciationRate, DepreciationPeriodType, DepreciationPeriodValue
     FROM asset_depreciation_tb 
     WHERE AssetID = @AssetID
     ORDER BY DepreciationDate ASC";
 
-    using (var connection = new SqliteConnection(_connectionString))
-    {
-        await connection.OpenAsync();
-        var depreciationSchedule = await connection.QueryAsync(query, new { AssetID = assetId });
+            using (var connection = new SqliteConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+                var depreciationSchedule = await connection.QueryAsync(query, new { AssetID = assetId });
 
-        if (!depreciationSchedule.Any())
-        {
-            return NotFound($"No depreciation records found for AssetID {assetId}.");
+                if (!depreciationSchedule.Any())
+                {
+                    return NotFound($"No depreciation records found for AssetID {assetId}.");
+                }
+
+                return Ok(depreciationSchedule);
+            }
         }
-
-        return Ok(depreciationSchedule); 
-    }
-}
 
     }
 }
