@@ -146,16 +146,17 @@ namespace Backend.Controllers
                 return Ok(assets);
             }
         }
-     [HttpPost("TransferAsset")]
+[HttpPost("TransferAsset")]
 public async Task<IActionResult> TransferAssetAsync([FromBody] AssetTransferRequest request)
 {
-    if (request == null || request.AssetID <= 0 || string.IsNullOrWhiteSpace(request.NewOwner) || string.IsNullOrWhiteSpace(request.NewLocation) || string.IsNullOrWhiteSpace(request.PerformedBy))
+    if (request == null || request.AssetID <= 0 || string.IsNullOrWhiteSpace(request.NewOwner) || 
+        string.IsNullOrWhiteSpace(request.NewLocation) || string.IsNullOrWhiteSpace(request.PerformedBy))
     {
         return BadRequest("Invalid asset transfer request.");
     }
 
     const string getAssetQuery = @"
-        SELECT AssetID, AssetName, AssetCode, IssuedTo, AssetLocation 
+        SELECT AssetID, AssetName, AssetCode, CategoryID, IssuedTo, AssetLocation 
         FROM asset_item_db 
         WHERE AssetID = @AssetID";
 
@@ -166,21 +167,21 @@ public async Task<IActionResult> TransferAssetAsync([FromBody] AssetTransferRequ
 
     const string insertTransferHistoryQuery = @"
         INSERT INTO asset_transfer_history_tb 
-        (AssetID, AssetCode, PreviousOwner, NewOwner, PreviousLocation, NewLocation, TransferDate, Remarks) 
+        (AssetID, AssetCode, CategoryId, PreviousOwner, NewOwner, PreviousLocation, NewLocation, TransferDate, Remarks) 
         VALUES 
-        (@AssetID, @AssetCode, @PreviousOwner, @NewOwner, @PreviousLocation, @NewLocation, CURRENT_TIMESTAMP, @Remarks);";
+        (@AssetID, @AssetCode, @CategoryId, @PreviousOwner, @NewOwner, @PreviousLocation, @NewLocation, CURRENT_TIMESTAMP, @Remarks);";
 
     const string insertAssetHistoryQuery = @"
         INSERT INTO asset_history 
-        (AssetID, AssetCode, ActionType, ActionDate, PerformedBy, Remarks) 
+        (AssetID, AssetCode, CategoryId, ActionType, ActionDate, PerformedBy, Remarks) 
         VALUES 
-        (@AssetID, @AssetCode, 'Transfer', CURRENT_TIMESTAMP, @PerformedBy, @Remarks);";
+        (@AssetID, @AssetCode, @CategoryId, 'Transfer', CURRENT_TIMESTAMP, @PerformedBy, @Remarks);";
 
     const string insertNotificationQuery = @"
         INSERT INTO AssetNotifications_tb 
-        (Type, AssetId, AssetName, AssetCode, Message, Date, Priority, Read) 
+        (Type, AssetId, AssetName, AssetCode, CategoryId, Message, Date, Priority, Read) 
         VALUES 
-        ('Transfer', @AssetID, @AssetName, @AssetCode, @Message, CURRENT_TIMESTAMP, 'Medium', 0);";
+        ('Transfer', @AssetID, @AssetName, @AssetCode, @CategoryId, @Message, CURRENT_TIMESTAMP, 'Medium', 0);";
 
     try
     {
@@ -214,6 +215,7 @@ public async Task<IActionResult> TransferAssetAsync([FromBody] AssetTransferRequ
                 {
                     request.AssetID,
                     asset.AssetCode,
+                    CategoryId = asset.CategoryID,  // ✅ Corrected Parameter Name
                     PreviousOwner = asset.IssuedTo ?? "Unknown",
                     NewOwner = request.NewOwner,
                     PreviousLocation = asset.AssetLocation ?? "Unknown",
@@ -226,6 +228,7 @@ public async Task<IActionResult> TransferAssetAsync([FromBody] AssetTransferRequ
                 {
                     request.AssetID,
                     asset.AssetCode,
+                    CategoryId = asset.CategoryID,  // ✅ Corrected Parameter Name
                     request.PerformedBy,
                     request.Remarks
                 }, transaction);
@@ -237,6 +240,7 @@ public async Task<IActionResult> TransferAssetAsync([FromBody] AssetTransferRequ
                     request.AssetID,
                     asset.AssetName,
                     asset.AssetCode,
+                    CategoryId = asset.CategoryID,  // ✅ Corrected Parameter Name
                     Message = notificationMessage
                 }, transaction);
 
@@ -255,6 +259,7 @@ public async Task<IActionResult> TransferAssetAsync([FromBody] AssetTransferRequ
         return StatusCode(500, $"An error occurred: {ex.Message}");
     }
 }
+
 
         [HttpPut("UpdateAssetStatus/{assetId}")]
         public async Task<IActionResult> UpdateAssetStatusAsync(int assetId, [FromBody] string newStatus)

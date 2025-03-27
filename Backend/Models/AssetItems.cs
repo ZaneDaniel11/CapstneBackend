@@ -5,14 +5,18 @@ namespace AssetItems.Models
 
   public class AssetTransferRequest
     {
+      
         public int AssetID { get; set; }
         public string NewOwner { get; set; }
         public string NewLocation { get; set; }
+        public int CategoryID { get; set; }
         public string Remarks { get; set; }
          public string PerformedBy { get; set; }  
     }
     public class AssetItem
     {
+    
+  public int AssetCategoryID { get; set; }
         public int AssetId { get; set; }  // Matches the AssetID primary key
         public int CategoryID { get; set; }
         public string AssetName { get; set; }
