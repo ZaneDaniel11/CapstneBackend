@@ -16,17 +16,17 @@ namespace Backend.Controllers
     {
 
         private readonly string _connectionString = "Data Source=capstone.db";
-       
-[HttpGet("asset-category-summary")]
-public async Task<IActionResult> GetAssetCategorySummary(DateTime? startDate = null, DateTime? endDate = null)
-{
-    endDate ??= DateTime.UtcNow; // Default to today's date if not provided
 
-    using (var connection = new SqliteConnection(_connectionString))
-    {
-        await connection.OpenAsync();
+        [HttpGet("asset-category-summary")]
+        public async Task<IActionResult> GetAssetCategorySummary(DateTime? startDate = null, DateTime? endDate = null)
+        {
+            endDate ??= DateTime.UtcNow; // Default to today's date if not provided
 
-        string query = @"
+            using (var connection = new SqliteConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                string query = @"
             WITH LatestDepreciation AS (
                 SELECT d.AssetID, d.RemainingValue
                 FROM asset_depreciation_tb d
@@ -49,25 +49,25 @@ public async Task<IActionResult> GetAssetCategorySummary(DateTime? startDate = n
             LEFT JOIN LatestDepreciation ld ON a.AssetID = ld.AssetID
             GROUP BY ac.CategoryName;";
 
-        var result = await connection.QueryAsync(query, new { EndDate = endDate });
+                var result = await connection.QueryAsync(query, new { EndDate = endDate });
 
-        return Ok(result);
-    }
-}
+                return Ok(result);
+            }
+        }
 
 
-[HttpGet("asset-category-summary-detailed")]
-public async Task<IActionResult> GetAssetCategorySummaryDetailed(DateTime? startDate = null, DateTime? endDate = null)
-{
-    using (var connection = new SqliteConnection(_connectionString))
-    {
-        await connection.OpenAsync();
-
-        string query;
-
-        if (startDate.HasValue && endDate.HasValue)
+        [HttpGet("asset-category-summary-detailed")]
+        public async Task<IActionResult> GetAssetCategorySummaryDetailed(DateTime? startDate = null, DateTime? endDate = null)
         {
-            query = @"
+            using (var connection = new SqliteConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                string query;
+
+                if (startDate.HasValue && endDate.HasValue)
+                {
+                    query = @"
                 WITH RelevantDepreciation AS (
                     SELECT d.AssetID, d.RemainingValue, d.DepreciationDate
                     FROM asset_depreciation_tb d
@@ -94,12 +94,12 @@ public async Task<IActionResult> GetAssetCategorySummaryDetailed(DateTime? start
                 LEFT JOIN RelevantDepreciation rd ON a.AssetID = rd.AssetID
                 ORDER BY ac.CategoryName, a.AssetName;";
 
-            var result = await connection.QueryAsync(query, new { StartDate = startDate, EndDate = endDate });
-            return Ok(result);
-        }
-        else
-        {
-            query = @"
+                    var result = await connection.QueryAsync(query, new { StartDate = startDate, EndDate = endDate });
+                    return Ok(result);
+                }
+                else
+                {
+                    query = @"
                 WITH LatestDepreciation AS (
                     SELECT d.AssetID, d.RemainingValue, d.DepreciationDate
                     FROM asset_depreciation_tb d
@@ -124,11 +124,11 @@ public async Task<IActionResult> GetAssetCategorySummaryDetailed(DateTime? start
                 LEFT JOIN LatestDepreciation ld ON a.AssetID = ld.AssetID
                 ORDER BY ac.CategoryName, a.AssetName;";
 
-            var result = await connection.QueryAsync(query);
-            return Ok(result);
+                    var result = await connection.QueryAsync(query);
+                    return Ok(result);
+                }
+            }
         }
-    }
-}
 
         // GET: api/AssetApi/GetAssetsByCategory?categoryID=1
         [HttpGet("GetAssetsByCategory")]
@@ -146,95 +146,115 @@ public async Task<IActionResult> GetAssetCategorySummaryDetailed(DateTime? start
                 return Ok(assets);
             }
         }
-        [HttpPost("TransferAsset")]
-        public async Task<IActionResult> TransferAssetAsync([FromBody] AssetTransferRequest request)
-        {
-            if (request == null || request.AssetID <= 0 || string.IsNullOrWhiteSpace(request.NewOwner) || string.IsNullOrWhiteSpace(request.NewLocation))
-            {
-                return BadRequest("Invalid asset transfer request.");
-            }
+     [HttpPost("TransferAsset")]
+public async Task<IActionResult> TransferAssetAsync([FromBody] AssetTransferRequest request)
+{
+    if (request == null || request.AssetID <= 0 || string.IsNullOrWhiteSpace(request.NewOwner) || string.IsNullOrWhiteSpace(request.NewLocation) || string.IsNullOrWhiteSpace(request.PerformedBy))
+    {
+        return BadRequest("Invalid asset transfer request.");
+    }
 
-            const string getAssetQuery = "SELECT AssetID, IssuedTo, AssetLocation FROM asset_item_db WHERE AssetID = @AssetID";
+    const string getAssetQuery = @"
+        SELECT AssetID, AssetName, AssetCode, IssuedTo, AssetLocation 
+        FROM asset_item_db 
+        WHERE AssetID = @AssetID";
 
-            const string updateAssetQuery = @"
+    const string updateAssetQuery = @"
         UPDATE asset_item_db 
         SET IssuedTo = @NewOwner, AssetLocation = @NewLocation 
         WHERE AssetID = @AssetID";
 
-            const string insertTransferHistoryQuery = @"
+    const string insertTransferHistoryQuery = @"
         INSERT INTO asset_transfer_history_tb 
-        (AssetID, PreviousOwner, NewOwner, PreviousLocation, NewLocation, TransferDate, Remarks) 
+        (AssetID, AssetCode, PreviousOwner, NewOwner, PreviousLocation, NewLocation, TransferDate, Remarks) 
         VALUES 
-        (@AssetID, @PreviousOwner, @NewOwner, @PreviousLocation, @NewLocation, CURRENT_TIMESTAMP, @Remarks);";
+        (@AssetID, @AssetCode, @PreviousOwner, @NewOwner, @PreviousLocation, @NewLocation, CURRENT_TIMESTAMP, @Remarks);";
 
-            const string insertAssetHistoryQuery = @"
+    const string insertAssetHistoryQuery = @"
         INSERT INTO asset_history 
-        (AssetID, ActionType, ActionDate, PerformedBy, Remarks) 
+        (AssetID, AssetCode, ActionType, ActionDate, PerformedBy, Remarks) 
         VALUES 
-        (@AssetID, @ActionType, CURRENT_TIMESTAMP, @PerformedBy, @Remarks);";
+        (@AssetID, @AssetCode, 'Transfer', CURRENT_TIMESTAMP, @PerformedBy, @Remarks);";
 
-            try
+    const string insertNotificationQuery = @"
+        INSERT INTO AssetNotifications_tb 
+        (Type, AssetId, AssetName, AssetCode, Message, Date, Priority, Read) 
+        VALUES 
+        ('Transfer', @AssetID, @AssetName, @AssetCode, @Message, CURRENT_TIMESTAMP, 'Medium', 0);";
+
+    try
+    {
+        using (var connection = new SqliteConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            var asset = await connection.QueryFirstOrDefaultAsync<AssetItem>(getAssetQuery, new { request.AssetID });
+
+            if (asset == null)
             {
-                using (var connection = new SqliteConnection(_connectionString))
+                return NotFound("Asset not found.");
+            }
+
+            if (asset.IssuedTo == request.NewOwner && asset.AssetLocation == request.NewLocation)
+            {
+                return BadRequest("Asset is already assigned to this owner and location.");
+            }
+
+            using (var transaction = await connection.BeginTransactionAsync())
+            {
+                // Update asset details
+                await connection.ExecuteAsync(updateAssetQuery, new
                 {
-                    connection.Open();
-                    var asset = await connection.QueryFirstOrDefaultAsync<AssetItem>(getAssetQuery, new { request.AssetID });
+                    request.AssetID,
+                    request.NewOwner,
+                    request.NewLocation
+                }, transaction);
 
-                    if (asset == null)
-                    {
-                        return NotFound("Asset not found.");
-                    }
+                // Insert transfer history
+                await connection.ExecuteAsync(insertTransferHistoryQuery, new
+                {
+                    request.AssetID,
+                    asset.AssetCode,
+                    PreviousOwner = asset.IssuedTo ?? "Unknown",
+                    NewOwner = request.NewOwner,
+                    PreviousLocation = asset.AssetLocation ?? "Unknown",
+                    NewLocation = request.NewLocation,
+                    request.Remarks
+                }, transaction);
 
-                    if (asset.IssuedTo == request.NewOwner && asset.AssetLocation == request.NewLocation)
-                    {
-                        return BadRequest("Asset is already assigned to this owner and location.");
-                    }
+                // Log asset history
+                await connection.ExecuteAsync(insertAssetHistoryQuery, new
+                {
+                    request.AssetID,
+                    asset.AssetCode,
+                    request.PerformedBy,
+                    request.Remarks
+                }, transaction);
 
-                    using (var transaction = connection.BeginTransaction())
-                    {
-                        // Update asset details
-                        await connection.ExecuteAsync(updateAssetQuery, new
-                        {
-                            request.AssetID,
-                            request.NewOwner,
-                            request.NewLocation
-                        }, transaction);
+                // Insert notification
+                string notificationMessage = $"Asset {asset.AssetCode} transferred to {request.NewOwner} at {request.NewLocation} by {request.PerformedBy}.";
+                await connection.ExecuteAsync(insertNotificationQuery, new
+                {
+                    request.AssetID,
+                    asset.AssetName,
+                    asset.AssetCode,
+                    Message = notificationMessage
+                }, transaction);
 
-                        // Insert transfer history
-                        await connection.ExecuteAsync(insertTransferHistoryQuery, new
-                        {
-                            request.AssetID,
-                            PreviousOwner = asset.IssuedTo ?? "Unknown",
-                            NewOwner = request.NewOwner,
-                            PreviousLocation = asset.AssetLocation ?? "Unknown",
-                            NewLocation = request.NewLocation,
-                            request.Remarks
-                        }, transaction);
-
-                        // Log asset history
-                        await connection.ExecuteAsync(insertAssetHistoryQuery, new
-                        {
-                            request.AssetID,
-                            ActionType = "Transfer",
-                            PerformedBy = request.NewOwner, // Assuming the new owner performs the transfer
-                            request.Remarks
-                        }, transaction);
-
-                        transaction.Commit();
-                    }
-
-                    return Ok(new { Message = "Asset transferred successfully.", AssetID = request.AssetID });
-                }
+                await transaction.CommitAsync();
             }
-            catch (SqliteException ex)
-            {
-                return StatusCode(500, $"Database error: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An error occurred: {ex.Message}");
-            }
+
+            return Ok(new { Message = "Asset transferred successfully.", AssetID = request.AssetID });
         }
+    }
+    catch (SqliteException ex)
+    {
+        return StatusCode(500, $"Database error: {ex.Message}");
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"An error occurred: {ex.Message}");
+    }
+}
 
         [HttpPut("UpdateAssetStatus/{assetId}")]
         public async Task<IActionResult> UpdateAssetStatusAsync(int assetId, [FromBody] string newStatus)
