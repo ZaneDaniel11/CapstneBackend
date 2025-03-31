@@ -25,22 +25,27 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpPost("InsertCategory")]
+      [HttpPost("InsertCategory")]
         public async Task<IActionResult> InsertCategoryAsync(Category cat)
         {
             const string query = @"
-                INSERT INTO category_tb (CategoryName) 
-                VALUES (@CategoryName);
+                INSERT INTO category_tb (CategoryName, CategoryViewID) 
+                VALUES (@CategoryName, @CategoryViewID);
                 SELECT * FROM category_tb ORDER BY Id DESC LIMIT 1;";
 
             using (var connection = new SqliteConnection(_connectionString))
             {
                 connection.Open();
-                var result = await connection.QuerySingleOrDefaultAsync<Category>(query, new { CategoryName = cat.CategoryName });
+                var result = await connection.QuerySingleOrDefaultAsync<Category>(query, new 
+                { 
+                    CategoryName = cat.CategoryName, 
+                    CategoryViewID = cat.CategoryViewID 
+                });
 
                 return Ok(result);
             }
         }
+
 
         [HttpDelete("DeleteCategory")]
         public async Task<IActionResult> DeleteCategoryAsync(int CategoryId)

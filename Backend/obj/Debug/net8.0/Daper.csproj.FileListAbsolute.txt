@@ -387,3 +387,4 @@ C:\Users\Administrator\Documents\GitHub\CapstneBackend\backend\obj\Debug\net8.0\
 C:\Users\Administrator\Documents\GitHub\CapstneBackend\backend\obj\Debug\net8.0\Daper.genruntimeconfig.cache
 C:\Users\Administrator\Documents\GitHub\CapstneBackend\backend\obj\Debug\net8.0\ref\Daper.dll
 C:\Github\CapstneBackend\backend\bin\Debug\net8.0\capstone.db
+C:\Users\Administrator\Documents\GitHub\CapstneBackend\backend\bin\Debug\net8.0\capstone.db
