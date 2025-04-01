@@ -14,32 +14,42 @@ namespace Backend.Controllers
     {
         private SqliteConnection _connection = new SqliteConnection("Data Source=capstone.db");
 
-        [HttpPost("CreateUser")]
-        public async Task<IActionResult> CreateUserAsync(User user)
-        {
-            byte[] salt;
-            byte[] passwordHash = CreatePasswordHash(user.Password, out salt);
+[HttpPost("CreateUser")]
+public async Task<IActionResult> CreateUserAsync(User user)
+{
+    byte[] salt;
+    byte[] passwordHash = CreatePasswordHash(user.Password, out salt);
 
-            const string query = @"
-        INSERT INTO users_tb (UserName, Password, Salt, CreatedDate, UserType, Email, Token, Name, Department)
-        VALUES (@UserName, @Password, @Salt, @CreatedDate, @UserType, @Email, @Token, @Name, @Department);
+    const string query = @"
+        INSERT INTO users_tb (
+            UserName, Password, Salt, CreatedDate, 
+            UserType, Email, Token, Name, Department, 
+            CategoryViewID
+        )
+        VALUES (
+            @UserName, @Password, @Salt, @CreatedDate, 
+            @UserType, @Email, @Token, @Name, @Department, 
+            @CategoryViewID
+        );
         SELECT * FROM users_tb ORDER BY UserId DESC LIMIT 1;";
 
-            var result = await _connection.QuerySingleOrDefaultAsync<User>(query, new
-            {
-                user.UserName,
-                Password = Convert.ToBase64String(passwordHash),
-                Salt = Convert.ToBase64String(salt),
-                user.CreatedDate,
-                user.UserType,
-                user.Email,
-                user.Token,
-                user.Name,        // Include Name
-                user.Department   // Include Department
-            });
+    var result = await _connection.QuerySingleOrDefaultAsync<User>(query, new
+    {
+        user.UserName,
+        Password = Convert.ToBase64String(passwordHash),
+        Salt = Convert.ToBase64String(salt),
+        user.CreatedDate,
+        user.UserType,
+        user.Email,
+        user.Token,
+        user.Name,
+        user.Department,
+        user.CategoryViewID  // New field added here
+    });
 
-            return Ok(result);
-        }
+    return Ok(result);
+}
+
 
 
         private byte[] CreatePasswordHash(string password, out byte[] salt)
