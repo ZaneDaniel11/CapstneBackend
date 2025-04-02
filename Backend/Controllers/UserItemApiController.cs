@@ -26,29 +26,35 @@ namespace Backend.Controllers
                 return Ok(items);
             }
         }
-        [HttpGet("GetItemCountsByCategory")]
-        public async Task<IActionResult> GetItemCountsByCategoryAsync()
-        {
-            const string query = @"
-                SELECT c.Id AS CategoryID, c.CategoryName, COUNT(i.ItemID) AS ItemCount 
-                FROM category_tb c
-                LEFT JOIN items_db i ON c.Id = i.CategoryID
-                GROUP BY c.Id, c.CategoryName";
+       [HttpGet("GetItemCountsByCategory")]
+public async Task<IActionResult> GetItemCountsByCategoryAsync()
+{
+    const string query = @"
+        SELECT 
+            c.Id AS CategoryID, 
+            c.CategoryViewID, 
+            c.CategoryName, 
+            COUNT(i.ItemID) AS ItemCount 
+        FROM category_tb c
+        LEFT JOIN items_db i ON c.Id = i.CategoryID
+        GROUP BY c.Id, c.CategoryName, c.CategoryViewID";
 
-            using (var connection = new SqliteConnection(_connectionString))
-            {
-                connection.Open();
-                var counts = await connection.QueryAsync<CategoryItemCount>(query);
-                return Ok(counts); // Return a list of categories with item counts
-            }
-        }
+    using (var connection = new SqliteConnection(_connectionString))
+    {
+        connection.Open();
+        var counts = await connection.QueryAsync<CategoryItemCount>(query);
+        return Ok(counts);
+    }
+}
 
         // Class to hold the response data
-        public class CategoryItemCount
-        {
-            public int CategoryID { get; set; }
-            public string CategoryName { get; set; } // Added CategoryName property
-            public int ItemCount { get; set; }
-        }
+       public class CategoryItemCount
+{
+    public int CategoryID { get; set; }
+    public int CategoryViewID { get; set; }  // ✅ Added this
+    public string CategoryName { get; set; }
+    public int ItemCount { get; set; }
+}
+
     }
 }

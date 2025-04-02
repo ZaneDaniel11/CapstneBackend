@@ -62,34 +62,64 @@ public async Task<IActionResult> CreateUserAsync(User user)
         }
 
         [HttpPut("UpdateUser")]
-        public async Task<IActionResult> UpdateUserAsync(int UserId, User user)
-        {
-            byte[] salt;
-            byte[] passwordHash = CreatePasswordHash(user.Password, out salt);
-
-            const string query = @"
-        UPDATE users_tb 
-        SET UserName = @UserName, Password = @Password, Salt = @Salt, 
-            UserType = @UserType, Email = @Email, Token = @Token, 
-            Name = @Name, Department = @Department
-        WHERE UserId = @UserId;
-        SELECT * FROM users_tb WHERE UserId = @UserId LIMIT 1;";
-
-            var result = await _connection.QuerySingleOrDefaultAsync<User>(query, new
+            public async Task<IActionResult> UpdateUserAsync(int UserId, User user)
             {
-                user.UserName,
-                Password = Convert.ToBase64String(passwordHash),
-                Salt = Convert.ToBase64String(salt),
-                user.UserType,
-                user.Email,
-                user.Token,
-                user.Name,        // Include Name
-                user.Department,   // Include Department
-                UserId
-            });
+                // Get current user to preserve password if not changed
+                const string getUserQuery = @"SELECT * FROM users_tb WHERE UserId = @UserId LIMIT 1;";
+                var existingUser = await _connection.QuerySingleOrDefaultAsync<User>(getUserQuery, new { UserId });
 
-            return Ok(result);
-        }
+                if (existingUser == null)
+                    return NotFound("User not found.");
+
+                byte[] passwordHash;
+                byte[] salt;
+
+                // Check if password is provided and different
+                if (!string.IsNullOrEmpty(user.Password))
+                {
+                    passwordHash = CreatePasswordHash(user.Password, out salt);
+                }
+                else
+                {
+                    passwordHash = Convert.FromBase64String(existingUser.Password);
+                    salt = Convert.FromBase64String(existingUser.Salt);
+                }
+
+                // Set CategoryViewID based on UserType
+                int categoryViewID = user.UserType?.ToLower() == "teacher" ? 1 : 0;
+
+                const string updateQuery = @"
+                    UPDATE users_tb 
+                    SET UserName = @UserName,
+                        Password = @Password,
+                        Salt = @Salt,
+                        UserType = @UserType,
+                        Email = @Email,
+                        Token = @Token,
+                        Name = @Name,
+                        Department = @Department,
+                        CategoryViewID = @CategoryViewID
+                    WHERE UserId = @UserId;
+
+                    SELECT * FROM users_tb WHERE UserId = @UserId LIMIT 1;";
+
+                var result = await _connection.QuerySingleOrDefaultAsync<User>(updateQuery, new
+                {
+                    user.UserName,
+                    Password = Convert.ToBase64String(passwordHash),
+                    Salt = Convert.ToBase64String(salt),
+                    user.UserType,
+                    user.Email,
+                    user.Token,
+                    user.Name,
+                    user.Department,
+                    CategoryViewID = categoryViewID,
+                    UserId
+                });
+
+                return Ok(result);
+            }
+
 
         [HttpDelete("DeleteUser")]
         public async Task<IActionResult> DeleteUserAsync(int UserId)
