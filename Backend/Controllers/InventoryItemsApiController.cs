@@ -76,8 +76,8 @@ public async Task<IActionResult> GetDashboardCountsAsync()
         public async Task<IActionResult> InsertItemAsync(Item newItem)
         {
             const string query = @"
-                INSERT INTO items_db (CategoryID, ItemName, Quantity, Description, DateAdded) 
-                VALUES (@CategoryID, @ItemName, @Quantity, @Description, @DateAdded);
+                INSERT INTO items_db (CategoryID, ItemName, Quantity, Description, DateAdded,CategoryViewID) 
+                VALUES (@CategoryID, @ItemName, @Quantity, @Description, @DateAdded,@CategoryViewID);
                 SELECT * FROM items_db ORDER BY ItemID DESC LIMIT 1;";
 
             using (var connection = new SqliteConnection(_connectionString))
@@ -89,7 +89,8 @@ public async Task<IActionResult> GetDashboardCountsAsync()
                     newItem.ItemName,
                     newItem.Quantity,
                     newItem.Description,
-                    newItem.DateAdded
+                    newItem.DateAdded,
+                    newItem.CategoryViewID
                 });
 
                 return Ok(result);
