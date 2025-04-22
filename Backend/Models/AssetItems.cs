@@ -2,6 +2,18 @@
 namespace AssetItems.Models
 {
 
+public class DisposedAsset
+{
+    public int AssetID { get; set; }
+    public int CategoryID { get; set; }
+    public string AssetName { get; set; }
+    public string AssetCode { get; set; }
+    public DateTime DisposalDate { get; set; }
+    public string DisposalReason { get; set; }
+    public decimal OriginalValue { get; set; }
+    public decimal DisposedValue { get; set; }
+    public decimal LossValue { get; set; }
+}
 
   public class AssetTransferRequest
     {
