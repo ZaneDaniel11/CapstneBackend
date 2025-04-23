@@ -17,29 +17,31 @@ namespace Backend.Controllers
         
         private readonly string _connectionString = "Data Source=capstone.db";
 
-        [HttpGet("GetAllAssets")]
-public async Task<IActionResult> GetAllAssetsAsync()
+     [HttpGet("GetAssetSummaries")]
+public async Task<IActionResult> GetAssetSummariesAsync()
 {
     const string query = @"
         SELECT 
-            AssetID,
-            AssetName,
-            AssetCode,
-            CategoryID,
-            PurchaseDate,
-            PurchaseCost,
-            Supplier,
-            WarrantyExpiry
-        FROM asset_item_db
-        ORDER BY AssetName ASC;
+            ai.AssetID AS AssetId,
+            ai.AssetName,
+            ai.AssetCode,
+            ac.CategoryName AS AssetCategory,
+            ai.CategoryID AS AssetCategoryId,
+            ai.DatePurchased AS PurchaseDate,
+            ai.WarrantyExpirationDate AS WarrantyExpiration,
+            ai.AssetVendor AS Vendor,
+            ai.AssetCost AS CurrentValue
+        FROM asset_item_db ai
+        LEFT JOIN asset_category_tb ac ON ai.CategoryID = ac.CategoryId
+        ORDER BY ai.AssetName ASC;
     ";
 
     try
     {
         using (var connection = new SqliteConnection(_connectionString))
         {
-            var assets = await connection.QueryAsync(query);
-            return Ok(assets);
+            var results = await connection.QueryAsync(query);
+            return Ok(results);
         }
     }
     catch (SqliteException ex)
