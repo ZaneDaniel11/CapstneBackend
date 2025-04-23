@@ -17,6 +17,42 @@ namespace Backend.Controllers
         
         private readonly string _connectionString = "Data Source=capstone.db";
 
+        [HttpGet("GetAllAssets")]
+public async Task<IActionResult> GetAllAssetsAsync()
+{
+    const string query = @"
+        SELECT 
+            AssetID,
+            AssetName,
+            AssetCode,
+            CategoryID,
+            PurchaseDate,
+            PurchaseCost,
+            Supplier,
+            WarrantyExpiry
+        FROM asset_item_db
+        ORDER BY AssetName ASC;
+    ";
+
+    try
+    {
+        using (var connection = new SqliteConnection(_connectionString))
+        {
+            var assets = await connection.QueryAsync(query);
+            return Ok(assets);
+        }
+    }
+    catch (SqliteException ex)
+    {
+        return StatusCode(500, $"Database error: {ex.Message}");
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"An error occurred: {ex.Message}");
+    }
+}
+
+
       [HttpPost("DisposeAsset")]
         public async Task<IActionResult> DisposeAssetAsync([FromBody] DisposedAsset request)
         {
