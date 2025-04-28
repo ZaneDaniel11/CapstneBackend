@@ -20,16 +20,18 @@ public async Task<IActionResult> GetDashboardCountsAsync()
             (SELECT COUNT(*) FROM Borrowreq_tb WHERE ReturnStatus = 'Not Returned') AS NotReturnedCount,
             (SELECT COUNT(*) FROM Borrowreq_tb WHERE ReturnStatus = 'Returned') AS ReturnedCount,
             (SELECT COUNT(*) FROM items_db) AS ItemCount,
-            (SELECT COUNT(*) FROM Users) AS UserCount,
+            (SELECT COUNT(*) FROM users_tb) AS UserCount,
             (SELECT COUNT(*) FROM Borrowreq_tb 
                 WHERE Admin1Approval = 'Approved' 
                   AND Admin2Approval = 'Approved' 
                   AND Admin3Approval = 'Approved') AS ApprovedLogsCount,
             (SELECT COUNT(*) FROM RequestItems_tb WHERE Status = 'Pending') AS PendingRequestCount,
             (SELECT COUNT(*) FROM Borrowreq_tb WHERE Status = 'Pending') AS PendingBorrowRequestCount,
+            (SELECT COUNT(*) FROM maintenance_tb WHERE MaintenanceStatus = 'Pending') AS PendingMaintenanceCount,
             (
                 (SELECT COUNT(*) FROM RequestItems_tb WHERE Status = 'Pending') +
-                (SELECT COUNT(*) FROM Borrowreq_tb WHERE Status = 'Pending')
+                (SELECT COUNT(*) FROM Borrowreq_tb WHERE Status = 'Pending') +
+                (SELECT COUNT(*) FROM maintenance_tb WHERE MaintenanceStatus = 'Pending')
             ) AS TotalPendingCount
     ";
 
