@@ -12,6 +12,45 @@ namespace Backend.Controllers
     public class ItemApiController : ControllerBase
     {
         private readonly string _connectionString = "Data Source=capstone.db";
+[HttpGet("GetDashboardCounts")]
+public async Task<IActionResult> GetDashboardCountsAsync()
+{
+    const string query = @"
+        SELECT
+            (SELECT COUNT(*) FROM Borrowreq_tb WHERE ReturnStatus = 'Not Returned') AS NotReturnedCount,
+            (SELECT COUNT(*) FROM Borrowreq_tb WHERE ReturnStatus = 'Returned') AS ReturnedCount,
+            (SELECT COUNT(*) FROM items_db) AS ItemCount,
+            (SELECT COUNT(*) FROM Users) AS UserCount,
+            (SELECT COUNT(*) FROM Borrowreq_tb 
+                WHERE Admin1Approval = 'Approved' 
+                  AND Admin2Approval = 'Approved' 
+                  AND Admin3Approval = 'Approved') AS ApprovedLogsCount,
+            (SELECT COUNT(*) FROM RequestItems_tb WHERE Status = 'Pending') AS PendingRequestCount,
+            (SELECT COUNT(*) FROM Borrowreq_tb WHERE Status = 'Pending') AS PendingBorrowRequestCount,
+            (
+                (SELECT COUNT(*) FROM RequestItems_tb WHERE Status = 'Pending') +
+                (SELECT COUNT(*) FROM Borrowreq_tb WHERE Status = 'Pending')
+            ) AS TotalPendingCount
+    ";
+
+    try
+    {
+        using (var connection = new SqliteConnection(_connectionString))
+        {
+            var result = await connection.QueryFirstOrDefaultAsync(query);
+            return Ok(result);
+        }
+    }
+    catch (SqliteException ex)
+    {
+        return StatusCode(500, $"Database error: {ex.Message}");
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"An error occurred: {ex.Message}");
+    }
+}
+
 
         // GET: api/ItemApi/GetItemsByCategory?categoryID=1
         [HttpGet("GetItemsByCategory")]
